@@ -6,7 +6,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useSession, signOut } from "next-auth/react";
 import Swal from "sweetalert2";
 
-const UserUpdate = ({ params }: { params: { id: string } }) => {
+const GenderUpdate = ({ params }: { params: { id: string } }) => {
   const { data: session } = useSession();
   const [formData, setFormData] = useState({
     gender_code: "",
@@ -203,4 +203,4 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
   );
 };
 
-export default UserUpdate;
+export default GenderUpdate;
