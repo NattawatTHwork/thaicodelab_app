@@ -6,24 +6,25 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useSession, signOut } from "next-auth/react";
 import Swal from "sweetalert2";
 
-const UserStatusCreate = () => {
+const EquipmentTypeUpdate = ({ params }: { params: { id: string } }) => {
   const { data: session } = useSession();
   const [formData, setFormData] = useState({
-    user_status: ""
+    equipment_type_code: "",
+    equipment_type: ""
   });
 
+  const { id } = params;
 
-  const permissionValue = 3;
+  const permissionValue = 5;
 
   useEffect(() => {
-    fetchPermissionChecks();
+    fetchData();
   }, [session]);
 
-  // Fetch user_statuss
-  const fetchPermissionChecks = async () => {
+  const fetchData = async () => {
     if (session?.user?.token) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/permission/permission-check`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/equipmenttype/${id}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${session.user.token}`,
@@ -37,8 +38,20 @@ const UserStatusCreate = () => {
         } else if (response.status === 403) {
           window.location.href = "/";
         }
+
+        const result = await response.json();
+        if (response.ok && result.status) {
+          const mappedFormData = {
+            equipment_type_code: result.data.equipment_type_code,
+            equipment_type: result.data.equipment_type,
+            description: result.data.description,
+          };
+          setFormData(mappedFormData);
+        } else {
+          console.error("Error fetching equipment types:", result.message);
+        }
       } catch (error) {
-        console.error("Error fetching permission checks:", error);
+        console.error("Error fetching equipment types:", error);
       }
     }
   };
@@ -55,8 +68,8 @@ const UserStatusCreate = () => {
   //   return Object.values(formData).every((value) => value.trim() !== "");
   // };
   const validateForm = () => {
-    return formData.user_status.trim() !== "";
-  };
+    return formData.equipment_type.trim() !== "";
+  };  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +85,8 @@ const UserStatusCreate = () => {
 
     // ส่งข้อมูลไปยัง API
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/userstatus`, {
-        method: "POST",
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/equipmenttype/${id}`, {
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${session?.user?.token}`,
           "Content-Type": "application/json",
@@ -87,11 +100,9 @@ const UserStatusCreate = () => {
         Swal.fire({
           icon: "success",
           title: "Success",
-          text: "User Status has been created successfully!",
+          text: "Equipment type has been updated successfully!",
         });
-        setFormData({
-          user_status: ""
-        });
+        fetchData();
       } else {
         Swal.fire({
           icon: "error",
@@ -117,9 +128,9 @@ const UserStatusCreate = () => {
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-5 xl:col-span-5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="px-7 py-4 dark:border-strokedark">
+              <div className="border-b border-stroke px-7 py-4 dark:border-strokedark">
                 <h3 className="font-medium text-black dark:text-white">
-                  User Status Create
+                  Equipment Type Update
                 </h3>
               </div>
               <div className="p-7">
@@ -127,18 +138,37 @@ const UserStatusCreate = () => {
                   <div className="mb-5.5">
                     <label
                       className="mb-3 block text-sm font-medium text-black dark:text-white"
-                      htmlFor="user_status"
+                      htmlFor="equipment_type_code"
                     >
-                      User Status
+                      Equipment Type Code
+                    </label>
+                    <div className="relative">
+                      <input
+                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        type="text"
+                        name="equipment_type_code"
+                        id="equipment_type_code"
+                        value={formData.equipment_type_code}
+                        onChange={handleChange}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-5.5">
+                    <label
+                      className="mb-3 block text-sm font-medium text-black dark:text-white"
+                      htmlFor="equipment_type"
+                    >
+                      Equipment Type
                     </label>
                     <div className="relative">
                       <input
                         className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="text"
-                        name="user_status"
-                        id="user_status"
-                        placeholder="Approved"
-                        value={formData.user_status}
+                        name="equipment_type"
+                        id="equipment_type"
+                        value={formData.equipment_type}
                         onChange={handleChange}
                       />
                     </div>
@@ -149,7 +179,8 @@ const UserStatusCreate = () => {
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
                       type="button"
                       onClick={() => setFormData({
-                        user_status: ""
+                        equipment_type_code: formData.equipment_type_code,
+                        equipment_type: ""
                       })}
                     >
                       Clear
@@ -172,4 +203,4 @@ const UserStatusCreate = () => {
   );
 };
 
-export default UserStatusCreate;
+export default EquipmentTypeUpdate;

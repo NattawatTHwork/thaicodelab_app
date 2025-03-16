@@ -53,9 +53,6 @@ const RankCreate = () => {
     }));
   };
 
-  // const validateForm = () => {
-  //   return Object.values(formData).every((value) => value.trim() !== "");
-  // };
   const validateForm = () => {
     return formData.full_rank.trim() !== "" && formData.short_rank.trim();
   };
@@ -137,7 +134,7 @@ const RankCreate = () => {
                     </label>
                     <div className="relative">
                       <input
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="text"
                         name="full_rank"
                         id="full_rank"
@@ -157,7 +154,7 @@ const RankCreate = () => {
                     </label>
                     <div className="relative">
                       <input
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="text"
                         name="short_rank"
                         id="short_rank"
@@ -177,8 +174,8 @@ const RankCreate = () => {
                     </label>
                     <div className="relative">
                       <input
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        type="text"
+                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        type="number"
                         name="sequence"
                         id="sequence"
                         placeholder="1"

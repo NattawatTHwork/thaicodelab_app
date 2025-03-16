@@ -45,10 +45,10 @@ const DepartmentSearch = () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/rolepermission/permissionbytokenuser`, {
           method: "GET",
-          headers: { 
-            Authorization: `Bearer ${session.user.token}`, 
-            "Content-Type": "application/json" 
-        },
+          headers: {
+            Authorization: `Bearer ${session.user.token}`,
+            "Content-Type": "application/json"
+          },
         });
         const result = await response.json();
         if (response.ok && result.status) {
@@ -107,12 +107,14 @@ const DepartmentSearch = () => {
     // จัดเรียงข้อมูล
     if (sortConfig) {
       updatedData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (typeof aValue === "string") aValue = aValue.toLowerCase();
+        if (typeof bValue === "string") bValue = bValue.toLowerCase();
+
+        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
     }
@@ -160,25 +162,25 @@ const DepartmentSearch = () => {
 
           if (response.ok && result.status) {
             Swal.fire(
-                "Deleted!", 
-                "The department has been deleted.", 
-                "success"
+              "Deleted!",
+              "The department has been deleted.",
+              "success"
             );
             setData((prevData) => prevData.filter((department) => department.department_id !== departmentId));
             setFilteredData((prevData) => prevData.filter((department) => department.department_id !== departmentId));
           } else {
             Swal.fire(
-                "Error!", 
-                result.message || "Something went wrong.", 
-                "error"
+              "Error!",
+              result.message || "Something went wrong.",
+              "error"
             );
           }
         } catch (error) {
           Swal.fire(
-            "Error!", 
-            "Failed to delete department.", 
+            "Error!",
+            "Failed to delete department.",
             "error"
-        );
+          );
           console.error("Error deleting department:", error);
         }
       }
@@ -219,15 +221,16 @@ const DepartmentSearch = () => {
                   <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
                       <tr>
-                        {["department_code", "department"].map((key) => (
+                        {[
+                          { key: "department_code", label: "Department Code" },
+                          { key: "department", label: "Department Name" },
+                        ].map(({ key, label }) => (
                           <th
                             key={key}
                             className="cursor-pointer px-6 py-3"
                             onClick={() => handleSort(key as keyof Department)}
                           >
-                            {key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")}{" "}
-                            {sortConfig?.key === key &&
-                              (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                            {label} {sortConfig?.key === key && (sortConfig.direction === "ascending" ? "↑" : "↓")}
                           </th>
                         ))}
                         <th className="px-6 py-3 text-center">Action</th>

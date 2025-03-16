@@ -5,26 +5,49 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useSession, signOut } from "next-auth/react";
 import Swal from "sweetalert2";
+import Select from "react-select";
 
-const RoleCreate = () => {
+type Equipment = {
+  equipment_id: number;
+  equipment_code: string;
+  equipment_unique_code: string;
+  equipment: string;
+}
+
+type User = {
+  user_id: number;
+  user_code: string;
+  short_rank: string;
+  firstname: string;
+  lastname: string;
+}
+
+
+const EquipmentBorrow = () => {
   const { data: session } = useSession();
-  const [formData, setFormData] = useState({
-    role: "",
-    description: ""
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [formData, setFormData] = useState<{
+    equipment_ids: string[];
+    borrow_user_id: string;
+    note: string;
+  }>({
+    equipment_ids: [],
+    borrow_user_id: "",
+    note: ""
   });
-
 
   const permissionValue = 3;
 
   useEffect(() => {
-    fetchPermissionChecks();
+    fetchSelectData("/equipment/returned-equipment-by-department", setEquipments);
+    fetchSelectData("/user", setUsers);
   }, [session]);
 
-  // Fetch genders
-  const fetchPermissionChecks = async () => {
+  const fetchSelectData = async (url: string, setter: (data: any) => void) => {
     if (session?.user?.token) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/permission/permission-check`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${session.user.token}`,
@@ -38,29 +61,44 @@ const RoleCreate = () => {
         } else if (response.status === 403) {
           window.location.href = "/";
         }
+
+        const result = await response.json();
+        if (response.ok && result.status) {
+          setter(result.data);
+        } else {
+          console.error(`Error fetching ${url}:`, result.message);
+        }
       } catch (error) {
-        console.error("Error fetching permission checks:", error);
+        console.error(`Error fetching ${url}:`, error);
       }
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const equipmentOptions = equipments.map((equipment) => ({
+    value: String(equipment.equipment_id),
+    label: equipment.equipment_code + ' - ' + equipment.equipment,
+  }));
+
+  const userOptions = users.map((user) => ({
+    value: String(user.user_id),
+    label: user.short_rank + ' ' + user.firstname + ' ' + user.lastname,
+  }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { name: string; value: string }) => {
+    const { name, value } = "target" in e ? e.target : e;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
 
-  // const validateForm = () => {
-  //   return Object.values(formData).every((value) => value.trim() !== "");
-  // };
   const validateForm = () => {
-    return formData.role.trim() !== "";
+    return formData.equipment_ids.length !== 0 && formData.borrow_user_id !== "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(formData);
 
     if (!validateForm()) {
       Swal.fire({
@@ -73,7 +111,7 @@ const RoleCreate = () => {
 
     // ส่งข้อมูลไปยัง API
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/role`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/equipmenttransaction/borrow`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session?.user?.token}`,
@@ -88,12 +126,14 @@ const RoleCreate = () => {
         Swal.fire({
           icon: "success",
           title: "Success",
-          text: "Role has been created successfully!",
+          text: "The equipment has been borrowed successfully!",
         });
         setFormData({
-          role: "",
-          description: ""
+          equipment_ids: [],
+          borrow_user_id: "",
+          note: ""
         });
+        fetchSelectData("/equipment/returned-equipment-by-department", setEquipments);
       } else {
         Swal.fire({
           icon: "error",
@@ -121,7 +161,7 @@ const RoleCreate = () => {
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <div className="px-7 py-4 dark:border-strokedark">
                 <h3 className="font-medium text-black dark:text-white">
-                  Role Create
+                  Equipment Borrow
                 </h3>
               </div>
               <div className="p-7">
@@ -129,29 +169,87 @@ const RoleCreate = () => {
                   <div className="mb-5.5">
                     <label
                       className="mb-3 block text-sm font-medium text-black dark:text-white"
-                      htmlFor="role"
+                      htmlFor="equipment_ids"
                     >
-                      Role
+                      Equipment
                     </label>
-                    <div className="relative">
-                      <input
-                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        type="text"
-                        name="role"
-                        id="role"
-                        placeholder="Accountant"
-                        value={formData.role}
-                        onChange={handleChange}
-                      />
-                    </div>
+                    <Select
+                      id="equipment_ids"
+                      name="equipment_ids"
+                      options={equipmentOptions}
+                      isMulti={true} // ✅ เปิดใช้งาน multi-select
+                      value={equipmentOptions.filter((option) => formData.equipment_ids.includes(option.value))}
+                      onChange={(selectedOptions) =>
+                        setFormData((prevData) => ({
+                          ...prevData,
+                          equipment_ids: selectedOptions ? selectedOptions.map((option) => option.value) : [], // ✅ แปลงเป็น string[]
+                        }))
+                      }
+                      classNamePrefix="react-select"
+                      placeholder="Select Equipment"
+                      classNames={{
+                        control: ({ isFocused }) =>
+                          `w-full rounded border px-2 py-2 transition-all ${isFocused
+                            ? "border-primary"
+                            : "border-stroke dark:border-strokedark"
+                          } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                        menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                        option: ({ isFocused, isSelected }) =>
+                          `px-4.5 py-3 transition-all ${isSelected
+                            ? "bg-primary text-white"
+                            : isFocused
+                              ? "bg-gray-100 dark:bg-gray-700"
+                              : "text-black dark:text-white"
+                          }`,
+                        singleValue: () => "text-black dark:text-white",
+                        placeholder: () => "text-gray-400 dark:text-gray-500",
+                        dropdownIndicator: () => "text-primary",
+                      }}
+                    />
                   </div>
 
                   <div className="mb-5.5">
                     <label
                       className="mb-3 block text-sm font-medium text-black dark:text-white"
-                      htmlFor="description"
+                      htmlFor="borrow_user_id"
                     >
-                      Description
+                      Borrow User
+                    </label>
+                    <Select
+                      id="borrow_user_id"
+                      name="borrow_user_id"
+                      options={userOptions}
+                      value={userOptions.find((option) => option.value === String(formData.borrow_user_id)) || null}
+                      onChange={(selectedOption) => handleChange({ name: "borrow_user_id", value: selectedOption?.value || "" })}
+                      classNamePrefix="react-select"
+                      placeholder="Select Borrow User"
+                      classNames={{
+                        control: ({ isFocused }) =>
+                          `w-full rounded border px-2 py-2 transition-all ${isFocused
+                            ? "border-primary"
+                            : "border-stroke dark:border-strokedark"
+                          } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                        menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                        option: ({ isFocused, isSelected }) =>
+                          `px-4.5 py-3 transition-all ${isSelected
+                            ? "bg-primary text-white"
+                            : isFocused
+                              ? "bg-gray-100 dark:bg-gray-700"
+                              : "text-black dark:text-white"
+                          }`,
+                        singleValue: () => "text-black dark:text-white",
+                        placeholder: () => "text-gray-400 dark:text-gray-500",
+                        dropdownIndicator: () => "text-primary",
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-5.5">
+                    <label
+                      className="mb-3 block text-sm font-medium text-black dark:text-white"
+                      htmlFor="note"
+                    >
+                      Note
                     </label>
                     <div className="relative">
                       <span className="absolute left-4.5 top-4">
@@ -187,11 +285,11 @@ const RoleCreate = () => {
 
                       <textarea
                         className="w-full rounded border border-stroke py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                        name="description"
-                        id="description"
+                        name="note"
+                        id="note"
                         rows={6}
-                        placeholder="Write your description here"
-                        value={formData.description}
+                        placeholder="Write your note here"
+                        value={formData.note}
                         onChange={handleChange}
                       ></textarea>
                     </div>
@@ -202,8 +300,9 @@ const RoleCreate = () => {
                       className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
                       type="button"
                       onClick={() => setFormData({
-                        role: "",
-                        description: ""
+                        equipment_ids: [],
+                        borrow_user_id: "",
+                        note: ""
                       })}
                     >
                       Clear
@@ -226,4 +325,4 @@ const RoleCreate = () => {
   );
 };
 
-export default RoleCreate;
+export default EquipmentBorrow;

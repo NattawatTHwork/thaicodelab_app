@@ -5,6 +5,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useSession, signOut } from "next-auth/react";
 import Swal from "sweetalert2";
+import Select from "react-select";
 
 type Department = {
   department_id: number;
@@ -27,7 +28,7 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
 
   useEffect(() => {
     fetchData();
-    fetchDepartments();
+    fetchSelectData("/department", setDepartments);
   }, [session]);
 
   const fetchData = async () => {
@@ -65,11 +66,10 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
     }
   };
 
-  // Fetch departments
-  const fetchDepartments = async () => {
+  const fetchSelectData = async (url: string, setter: (data: any) => void) => {
     if (session?.user?.token) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/department`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${session.user.token}`,
@@ -86,29 +86,31 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
 
         const result = await response.json();
         if (response.ok && result.status) {
-          setDepartments(result.data); // เก็บข้อมูล departments
+          setter(result.data);
         } else {
-          console.error("Error fetching departments:", result.message);
+          console.error(`Error fetching ${url}:`, result.message);
         }
       } catch (error) {
-        console.error("Error fetching departments:", error);
+        console.error(`Error fetching ${url}:`, error);
       }
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const departmentOptions = departments.map((department) => ({
+    value: String(department.department_id),
+    label: department.department,
+  }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { name: string; value: string }) => {
+    const { name, value } = "target" in e ? e.target : e;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
 
-  // const validateForm = () => {
-  //   return Object.values(formData).every((value) => value.trim() !== "");
-  // };
   const validateForm = () => {
-    return formData.equipment_group_code.trim() !== "" && formData.equipment_group.trim() !== "";
+    return formData.equipment_group.trim() !== "" && formData.department_id !== "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,7 +142,7 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
         Swal.fire({
           icon: "success",
           title: "Success",
-          text: "Equipment Group has been updated successfully!",
+          text: "Equipment group has been updated successfully!",
         });
         fetchData();
       } else {
@@ -180,7 +182,7 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
                       className="mb-3 block text-sm font-medium text-black dark:text-white"
                       htmlFor="equipment_group_code"
                     >
-                      EquipmentGroup Code
+                      Equipment Group Code
                     </label>
                     <div className="relative">
                       <input
@@ -204,7 +206,7 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
                     </label>
                     <div className="relative">
                       <input
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="text"
                         name="equipment_group"
                         id="equipment_group"
@@ -221,22 +223,33 @@ const EquipmentGroupUpdate = ({ params }: { params: { id: string } }) => {
                     >
                       Department
                     </label>
-                    <select
+                    <Select
                       id="department_id"
                       name="department_id"
-                      value={formData.department_id}
-                      onChange={handleChange}
-                      className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                    >
-                      <option value="" disabled>
-                        Select Department
-                      </option>
-                      {departments.map((department) => (
-                        <option key={department.department_id} value={department.department_id}>
-                          {department.department}
-                        </option>
-                      ))}
-                    </select>
+                      options={departmentOptions}
+                      value={departmentOptions.find((option) => option.value === String(formData.department_id)) || null}
+                      onChange={(selectedOption) => handleChange({ name: "department_id", value: selectedOption?.value || "" })}
+                      classNamePrefix="react-select"
+                      placeholder="Select Department"
+                      classNames={{
+                        control: ({ isFocused }) =>
+                          `w-full rounded border px-2 py-2 transition-all ${isFocused
+                            ? "border-primary"
+                            : "border-stroke dark:border-strokedark"
+                          } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                        menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                        option: ({ isFocused, isSelected }) =>
+                          `px-4.5 py-3 transition-all ${isSelected
+                            ? "bg-primary text-white"
+                            : isFocused
+                              ? "bg-gray-100 dark:bg-gray-700"
+                              : "text-black dark:text-white"
+                          }`,
+                        singleValue: () => "text-black dark:text-white",
+                        placeholder: () => "text-gray-400 dark:text-gray-500",
+                        dropdownIndicator: () => "text-primary",
+                      }}
+                    />
                   </div>
 
                   <div className="flex justify-end gap-4.5">

@@ -5,6 +5,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useSession, signOut } from "next-auth/react";
 import Swal from "sweetalert2";
+import Select from "react-select";
 
 type Gender = {
   gender_id: number;
@@ -61,20 +62,19 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
   const permissionValue = 5;
 
   useEffect(() => {
-    fetchGenders();
-    fetchRanks();
-    fetchRoles();
-    fetchDepartments();
-    fetchUserStatuses();
+    fetchSelectData("/gender", setGenders);
+    fetchSelectData("/rank", setRanks);
+    fetchSelectData("/role", setRoles);
+    fetchSelectData("/department", setDepartments);
+    fetchSelectData("/userstatus", setUserStatuses);
 
     fetchData();
   }, [session]);
 
-  // Fetch genders
-  const fetchGenders = async () => {
+  const fetchSelectData = async (url: string, setter: (data: any) => void) => {
     if (session?.user?.token) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/gender`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${session.user.token}`,
@@ -91,140 +91,12 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
 
         const result = await response.json();
         if (response.ok && result.status) {
-          setGenders(result.data); // เก็บข้อมูล genders
+          setter(result.data);
         } else {
-          console.error("Error fetching genders:", result.message);
+          console.error(`Error fetching ${url}:`, result.message);
         }
       } catch (error) {
-        console.error("Error fetching genders:", error);
-      }
-    }
-  };
-
-  // Fetch ranks
-  const fetchRanks = async () => {
-    if (session?.user?.token) {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/rank`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.user.token}`,
-            "Content-Type": "application/json",
-            Permission: permissionValue.toString(),
-          },
-        });
-
-        if (response.status === 401) {
-          signOut({ callbackUrl: "/auth/signin" });
-        } else if (response.status === 403) {
-          window.location.href = "/";
-        }
-
-        const result = await response.json();
-        if (response.ok && result.status) {
-          setRanks(result.data); // เก็บข้อมูล ranks
-        } else {
-          console.error("Error fetching ranks:", result.message);
-        }
-      } catch (error) {
-        console.error("Error fetching ranks:", error);
-      }
-    }
-  };
-
-  // Fetch roles
-  const fetchRoles = async () => {
-    if (session?.user?.token) {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/role`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.user.token}`,
-            "Content-Type": "application/json",
-            Permission: permissionValue.toString(),
-          },
-        });
-
-        if (response.status === 401) {
-          signOut({ callbackUrl: "/auth/signin" });
-        } else if (response.status === 403) {
-          window.location.href = "/";
-        }
-
-        const result = await response.json();
-        if (response.ok && result.status) {
-          setRoles(result.data); // เก็บข้อมูล roles
-        } else {
-          console.error("Error fetching roles:", result.message);
-        }
-      } catch (error) {
-        console.error("Error fetching roles:", error);
-      }
-    }
-  };
-
-  // Fetch departments
-  const fetchDepartments = async () => {
-    if (session?.user?.token) {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/department`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.user.token}`,
-            "Content-Type": "application/json",
-            Permission: permissionValue.toString(),
-          },
-        });
-
-        if (response.status === 401) {
-          signOut({ callbackUrl: "/auth/signin" });
-        } else if (response.status === 403) {
-          window.location.href = "/";
-        }
-
-        const result = await response.json();
-        if (response.ok && result.status) {
-          setDepartments(result.data); // เก็บข้อมูล departments
-        } else {
-          console.error("Error fetching departments:", result.message);
-        }
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-      }
-    }
-  };
-
-  // Fetch user statuses
-  const fetchUserStatuses = async () => {
-    if (session?.user?.token) {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/userstatus`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.user.token}`,
-            "Content-Type": "application/json",
-            Permission: permissionValue.toString(),
-          },
-        });
-
-        if (response.status === 401) {
-          signOut({ callbackUrl: "/auth/signin" });
-        } else if (response.status === 403) {
-          window.location.href = "/";
-        }
-
-        const result = await response.json();
-        if (response.ok && result.status) {
-          setUserStatuses(result.data); // เก็บข้อมูล user statuses
-          setFormData((prevData) => ({
-            ...prevData,
-            user_status_id: result.data[0].user_status_id.toString(),
-          }));
-        } else {
-          console.error("Error fetching user statuses:", result.message);
-        }
-      } catch (error) {
-        console.error("Error fetching user statuses:", error);
+        console.error(`Error fetching ${url}:`, error);
       }
     }
   };
@@ -271,9 +143,33 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    console.log(formData);
-    const { name, value } = e.target;
+  const genderOptions = genders.map((group) => ({
+    value: String(group.gender_id),
+    label: group.gender,
+  }));
+
+  const rankOptions = ranks.map((group) => ({
+    value: String(group.rank_id),
+    label: group.full_rank,
+  }));
+
+  const roleOptions = roles.map((group) => ({
+    value: String(group.role_id),
+    label: group.role,
+  }));
+
+  const departmentOptions = departments.map((group) => ({
+    value: String(group.department_id),
+    label: group.department,
+  }));
+
+  const userStatusOptions = userStatuses.map((group) => ({
+    value: String(group.user_status_id),
+    label: group.user_status,
+  }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { name: string; value: string }) => {
+    const { name, value } = "target" in e ? e.target : e;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -281,7 +177,7 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
   };
 
   const validateForm = () => {
-    return Object.values(formData).every((value) => value.trim() !== "");
+    return formData.rank_id !== "" && formData.firstname.trim() !== "" && formData.lastname.trim() !== "" && formData.email.trim() !== "" && formData.phone_number.trim() !== "" && formData.birthdate !== "" && formData.gender_id !== "" && formData.role_id !== "" && formData.department_id !== "" && formData.user_status_id !== "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -358,22 +254,33 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                       >
                         Rank
                       </label>
-                      <select
+                      <Select
                         id="rank_id"
                         name="rank_id"
-                        value={formData.rank_id}
-                        onChange={handleChange}
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                      >
-                        <option value="" disabled>
-                          Select Rank
-                        </option>
-                        {ranks.map((rank) => (
-                          <option key={rank.rank_id} value={rank.rank_id}>
-                            {rank.full_rank}
-                          </option>
-                        ))}
-                      </select>
+                        options={rankOptions}
+                        value={rankOptions.find((option) => option.value === String(formData.rank_id)) || null}
+                        onChange={(selectedOption) => handleChange({ name: "rank_id", value: selectedOption?.value || "" })}
+                        classNamePrefix="react-select"
+                        placeholder="Select Rank"
+                        classNames={{
+                          control: ({ isFocused }) =>
+                            `w-full rounded border px-2 py-2 transition-all ${isFocused
+                              ? "border-primary"
+                              : "border-stroke dark:border-strokedark"
+                            } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                          menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                          option: ({ isFocused, isSelected }) =>
+                            `px-4.5 py-3 transition-all ${isSelected
+                              ? "bg-primary text-white"
+                              : isFocused
+                                ? "bg-gray-100 dark:bg-gray-700"
+                                : "text-black dark:text-white"
+                            }`,
+                          singleValue: () => "text-black dark:text-white",
+                          placeholder: () => "text-gray-400 dark:text-gray-500",
+                          dropdownIndicator: () => "text-primary",
+                        }}
+                      />
                     </div>
 
                     <div className="w-full sm:w-2/5">
@@ -410,7 +317,7 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                           </svg>
                         </span>
                         <input
-                          className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                          className="w-full rounded border border-stroke py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                           type="text"
                           name="firstname"
                           id="firstname"
@@ -454,7 +361,7 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                           </svg>
                         </span>
                         <input
-                          className="w-full rounded border border-stroke bg-gray py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                          className="w-full rounded border border-stroke py-3 pl-11.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                           type="text"
                           name="lastname"
                           id="lastname"
@@ -519,7 +426,7 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                         Phone Number
                       </label>
                       <input
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                         type="text"
                         name="phone_number"
                         id="phone_number"
@@ -541,7 +448,7 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                         type="date"
                         value={formData.birthdate}
                         onChange={handleChange}
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border border-stroke px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                       />
                     </div>
                   </div>
@@ -554,22 +461,33 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                       >
                         Gender
                       </label>
-                      <select
+                      <Select
                         id="gender_id"
                         name="gender_id"
-                        value={formData.gender_id}
-                        onChange={handleChange}
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                      >
-                        <option value="" disabled>
-                          Select Gender
-                        </option>
-                        {genders.map((gender) => (
-                          <option key={gender.gender_id} value={gender.gender_id}>
-                            {gender.gender}
-                          </option>
-                        ))}
-                      </select>
+                        options={genderOptions}
+                        value={genderOptions.find((option) => option.value === String(formData.gender_id)) || null}
+                        onChange={(selectedOption) => handleChange({ name: "gender_id", value: selectedOption?.value || "" })}
+                        classNamePrefix="react-select"
+                        placeholder="Select Gender"
+                        classNames={{
+                          control: ({ isFocused }) =>
+                            `w-full rounded border px-2 py-2 transition-all ${isFocused
+                              ? "border-primary"
+                              : "border-stroke dark:border-strokedark"
+                            } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                          menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                          option: ({ isFocused, isSelected }) =>
+                            `px-4.5 py-3 transition-all ${isSelected
+                              ? "bg-primary text-white"
+                              : isFocused
+                                ? "bg-gray-100 dark:bg-gray-700"
+                                : "text-black dark:text-white"
+                            }`,
+                          singleValue: () => "text-black dark:text-white",
+                          placeholder: () => "text-gray-400 dark:text-gray-500",
+                          dropdownIndicator: () => "text-primary",
+                        }}
+                      />
                     </div>
 
                     <div className="w-full sm:w-1/2">
@@ -579,22 +497,33 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                       >
                         Role
                       </label>
-                      <select
+                      <Select
                         id="role_id"
                         name="role_id"
-                        value={formData.role_id}
-                        onChange={handleChange}
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                      >
-                        <option value="" disabled>
-                          Select Role
-                        </option>
-                        {roles.map((role) => (
-                          <option key={role.role_id} value={role.role_id}>
-                            {role.role}
-                          </option>
-                        ))}
-                      </select>
+                        options={roleOptions}
+                        value={roleOptions.find((option) => option.value === String(formData.role_id)) || null}
+                        onChange={(selectedOption) => handleChange({ name: "role_id", value: selectedOption?.value || "" })}
+                        classNamePrefix="react-select"
+                        placeholder="Select Role"
+                        classNames={{
+                          control: ({ isFocused }) =>
+                            `w-full rounded border px-2 py-2 transition-all ${isFocused
+                              ? "border-primary"
+                              : "border-stroke dark:border-strokedark"
+                            } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                          menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                          option: ({ isFocused, isSelected }) =>
+                            `px-4.5 py-3 transition-all ${isSelected
+                              ? "bg-primary text-white"
+                              : isFocused
+                                ? "bg-gray-100 dark:bg-gray-700"
+                                : "text-black dark:text-white"
+                            }`,
+                          singleValue: () => "text-black dark:text-white",
+                          placeholder: () => "text-gray-400 dark:text-gray-500",
+                          dropdownIndicator: () => "text-primary",
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -606,22 +535,33 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                       >
                         Department
                       </label>
-                      <select
+                      <Select
                         id="department_id"
                         name="department_id"
-                        value={formData.department_id}
-                        onChange={handleChange}
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                      >
-                        <option value="" disabled>
-                          Select Department
-                        </option>
-                        {departments.map((department) => (
-                          <option key={department.department_id} value={department.department_id}>
-                            {department.department}
-                          </option>
-                        ))}
-                      </select>
+                        options={departmentOptions}
+                        value={departmentOptions.find((option) => option.value === String(formData.department_id)) || null}
+                        onChange={(selectedOption) => handleChange({ name: "department_id", value: selectedOption?.value || "" })}
+                        classNamePrefix="react-select"
+                        placeholder="Select Department"
+                        classNames={{
+                          control: ({ isFocused }) =>
+                            `w-full rounded border px-2 py-2 transition-all ${isFocused
+                              ? "border-primary"
+                              : "border-stroke dark:border-strokedark"
+                            } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                          menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                          option: ({ isFocused, isSelected }) =>
+                            `px-4.5 py-3 transition-all ${isSelected
+                              ? "bg-primary text-white"
+                              : isFocused
+                                ? "bg-gray-100 dark:bg-gray-700"
+                                : "text-black dark:text-white"
+                            }`,
+                          singleValue: () => "text-black dark:text-white",
+                          placeholder: () => "text-gray-400 dark:text-gray-500",
+                          dropdownIndicator: () => "text-primary",
+                        }}
+                      />
                     </div>
 
                     <div className="w-full sm:w-1/2">
@@ -631,22 +571,33 @@ const UserUpdate = ({ params }: { params: { id: string } }) => {
                       >
                         User Status
                       </label>
-                      <select
+                      <Select
                         id="user_status_id"
                         name="user_status_id"
-                        value={formData.user_status_id}
-                        onChange={handleChange}
-                        className="w-full rounded border border-stroke bg-gray px-4.5 py-3 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
-                      >
-                        <option value="" disabled>
-                          Select User Status
-                        </option>
-                        {userStatuses.map((user_status) => (
-                          <option key={user_status.user_status_id} value={user_status.user_status_id}>
-                            {user_status.user_status}
-                          </option>
-                        ))}
-                      </select>
+                        options={userStatusOptions}
+                        value={userStatusOptions.find((option) => option.value === String(formData.user_status_id)) || null}
+                        onChange={(selectedOption) => handleChange({ name: "user_status_id", value: selectedOption?.value || "" })}
+                        classNamePrefix="react-select"
+                        placeholder="Select User Status"
+                        classNames={{
+                          control: ({ isFocused }) =>
+                            `w-full rounded border px-2 py-2 transition-all ${isFocused
+                              ? "border-primary"
+                              : "border-stroke dark:border-strokedark"
+                            } text-black dark:text-white dark:bg-meta-4 dark:focus:border-primary`,
+                          menu: () => "bg-white dark:bg-meta-4 rounded shadow-md border border-stroke dark:border-strokedark",
+                          option: ({ isFocused, isSelected }) =>
+                            `px-4.5 py-3 transition-all ${isSelected
+                              ? "bg-primary text-white"
+                              : isFocused
+                                ? "bg-gray-100 dark:bg-gray-700"
+                                : "text-black dark:text-white"
+                            }`,
+                          singleValue: () => "text-black dark:text-white",
+                          placeholder: () => "text-gray-400 dark:text-gray-500",
+                          dropdownIndicator: () => "text-primary",
+                        }}
+                      />
                     </div>
                   </div>
 

@@ -54,9 +54,9 @@ const UserSearch = () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/rolepermission/permissionbytokenuser`, {
           method: "GET",
-          headers: { 
-            Authorization: `Bearer ${session.user.token}`, 
-            "Content-Type": "application/json" 
+          headers: {
+            Authorization: `Bearer ${session.user.token}`,
+            "Content-Type": "application/json"
           },
         });
         const result = await response.json();
@@ -116,12 +116,14 @@ const UserSearch = () => {
     // จัดเรียงข้อมูล
     if (sortConfig) {
       updatedData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (typeof aValue === "string") aValue = aValue.toLowerCase();
+        if (typeof bValue === "string") bValue = bValue.toLowerCase();
+
+        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
     }
@@ -192,23 +194,23 @@ const UserSearch = () => {
 
           if (response.ok && result.status) {
             Swal.fire(
-              "Deleted!", 
-              "The user has been deleted.", 
+              "Deleted!",
+              "The user has been deleted.",
               "success"
             );
             setData((prevData) => prevData.filter((user) => user.user_id !== userId));
             setFilteredData((prevData) => prevData.filter((user) => user.user_id !== userId));
           } else {
             Swal.fire(
-              "Error!", 
-              result.message || "Something went wrong.", 
+              "Error!",
+              result.message || "Something went wrong.",
               "error"
             );
           }
         } catch (error) {
           Swal.fire(
-            "Error!", 
-            "Failed to delete user.", 
+            "Error!",
+            "Failed to delete user.",
             "error"
           );
           console.error("Error deleting user:", error);
@@ -274,15 +276,20 @@ const UserSearch = () => {
                   <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
                       <tr>
-                        {["user_code", "firstname", "role", "department", "email", "status"].map((key) => (
+                        {[
+                          { key: "user_code", label: "User Code" },
+                          { key: "firstname", label: "Name" },
+                          { key: "role", label: "Role" },
+                          { key: "department", label: "Department" },
+                          { key: "email", label: "Email" },
+                          { key: "user_status", label: "Status" },
+                        ].map(({ key, label }) => (
                           <th
                             key={key}
                             className="cursor-pointer px-6 py-3"
                             onClick={() => handleSort(key as keyof User)}
                           >
-                            {key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")}{" "}
-                            {sortConfig?.key === key &&
-                              (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                            {label} {sortConfig?.key === key && (sortConfig.direction === "ascending" ? "↑" : "↓")}
                           </th>
                         ))}
                         <th className="px-6 py-3 text-center">Action</th>
