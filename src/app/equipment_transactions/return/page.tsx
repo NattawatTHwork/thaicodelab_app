@@ -42,7 +42,7 @@ const EquipmentReturn = () => {
     equipment_return_details: [],
     return_user_id: "",
   });
-  const permissionValue = 3;
+  const permissionValue = 56;
 
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Equipment;
@@ -273,16 +273,11 @@ const EquipmentReturn = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-270">
-        <Breadcrumb pageName="Settings" />
+      <Breadcrumb pageName={["Equipment Management", "Equipment Transactions", "Equipment Return"]} />
 
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-5 xl:col-span-5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="px-7 py-4 dark:border-strokedark">
-                <h3 className="font-medium text-black dark:text-white">
-                  Equipment Return
-                </h3>
-              </div>
               <div className="p-7">
                 <form action="#">
                   <div className="mb-5.5">

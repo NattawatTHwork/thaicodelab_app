@@ -189,15 +189,12 @@ const EquipmentStatusSearch = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-270">
-        <Breadcrumb pageName="Data Table with Sorting & Pagination" />
+      <Breadcrumb pageName={["Equipment Management", "Equipment Status", "Equipment Status Search"]} />
 
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-5 xl:col-span-5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="px-7 py-4 dark:border-strokedark flex justify-between items-center">
-                <h3 className="font-medium text-black dark:text-white">
-                  Equipment Type Search
-                </h3>
+              <div className="px-7 py-4 dark:border-strokedark flex justify-end items-center">
                 {userPermissions.includes(3) && (
                   <Link
                     href="/equipment_status/create"

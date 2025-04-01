@@ -1,11 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
-import { signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+
+type UserProps = {
+  email: string;
+  role: string;
+  short_rank: string;
+  firstname: string;
+  lastname: string;
+}
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { data: session } = useSession();
+  const [user, setUser] = useState<UserProps>();
+
+  useEffect(() => {
+    fetchData();
+  }, [session]);
+
+  const fetchData = async () => {
+    if (session?.user?.token) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/name`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.status === 401) {
+          signOut({ callbackUrl: "/auth/signin" });
+        } else if (response.status === 403) {
+          window.location.href = "/";
+        }
+
+        const result = await response.json();
+        if (response.ok && result.status) {
+          setUser(result.data);
+        } else {
+          console.error("Error fetching datas:", result.message);
+        }
+      } catch (error) {
+        console.error("Error fetching datas:", error);
+      }
+    }
+  };
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -16,9 +59,9 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Thomas Anree
+            {user && user.short_rank}{user && user.firstname} {user && user.lastname}
           </span>
-          <span className="block text-xs">UX Designer</span>
+          <span className="block text-xs">{user && user.role}</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
@@ -82,7 +125,7 @@ const DropdownUser = () => {
                 My Profile
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 href="#"
                 className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
@@ -127,7 +170,7 @@ const DropdownUser = () => {
                 </svg>
                 Account Settings
               </Link>
-            </li>
+            </li> */}
           </ul>
           <button onClick={() => { signOut({ callbackUrl: "/auth/signin" }) }} className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
             <svg

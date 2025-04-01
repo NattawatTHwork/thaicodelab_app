@@ -112,16 +112,11 @@ const EquipmentTypeCreate = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-270">
-        <Breadcrumb pageName="Settings" />
+      <Breadcrumb pageName={["Equipment Management", "Equipment Types", "Equipment Type Create"]} />
 
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-5 xl:col-span-5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="px-7 py-4 dark:border-strokedark">
-                <h3 className="font-medium text-black dark:text-white">
-                  Equipment Type Create
-                </h3>
-              </div>
               <div className="p-7">
                 <form action="#">
                   <div className="mb-5.5">

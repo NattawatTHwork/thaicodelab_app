@@ -34,7 +34,7 @@ const RankSearch = () => {
   } | null>(null);
 
   // กำหนดค่า Permission
-  const permissionValue = 2;
+  const permissionValue = 20;
 
   useEffect(() => {
     fetchPermissions();
@@ -191,16 +191,13 @@ const RankSearch = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-270">
-        <Breadcrumb pageName="Data Table with Sorting & Pagination" />
+      <Breadcrumb pageName={["User Management", "Ranks", "Rank Search"]} />
 
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-5 xl:col-span-5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="px-7 py-4 dark:border-strokedark flex justify-between items-center">
-                <h3 className="font-medium text-black dark:text-white">
-                  Rank Search
-                </h3>
-                {userPermissions.includes(3) && (
+              <div className="px-7 py-4 dark:border-strokedark flex justify-end items-center">
+                {userPermissions.includes(21) && (
                   <Link
                     href="/ranks/create"
                     className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-center font-medium text-white hover:bg-opacity-90 w-1/4"
@@ -255,9 +252,9 @@ const RankSearch = () => {
                             </button>
                             {dropdownOpen === rank.rank_id && (
                               <div className="absolute right-0 top-full mt-2 w-40 bg-white border rounded shadow-md z-10 whitespace-nowrap">
-                                {userPermissions.includes(4) && <Link href={`/ranks/detail/${rank.rank_id}`}><button className="block w-full px-4 py-2 text-left hover:bg-gray-200">View</button></Link>}
-                                {userPermissions.includes(5) && <Link href={`/ranks/update/${rank.rank_id}`}><button className="block w-full px-4 py-2 text-left hover:bg-gray-200">Update</button></Link>}
-                                {userPermissions.includes(8) && <button onClick={() => handleDelete(rank.rank_id, rank.rank_code)} className="block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-200">Delete</button>}
+                                {userPermissions.includes(22) && <Link href={`/ranks/detail/${rank.rank_id}`}><button className="block w-full px-4 py-2 text-left hover:bg-gray-200">View</button></Link>}
+                                {userPermissions.includes(23) && <Link href={`/ranks/update/${rank.rank_id}`}><button className="block w-full px-4 py-2 text-left hover:bg-gray-200">Update</button></Link>}
+                                {userPermissions.includes(24) && <button onClick={() => handleDelete(rank.rank_id, rank.rank_code)} className="block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-200">Delete</button>}
                               </div>
                             )}
                           </td>

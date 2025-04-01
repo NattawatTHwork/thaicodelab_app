@@ -190,15 +190,12 @@ const EquipmentGroupSearch = () => {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-270">
-        <Breadcrumb pageName="Data Table with Sorting & Pagination" />
+      <Breadcrumb pageName={["Equipment Management", "Equipment Groups", "Equipment Group Search"]} />
 
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-5 xl:col-span-5">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-              <div className="px-7 py-4 dark:border-strokedark flex justify-between items-center">
-                <h3 className="font-medium text-black dark:text-white">
-                  Equipment Group Search
-                </h3>
+              <div className="px-7 py-4 dark:border-strokedark flex justify-end items-center">
                 {userPermissions.includes(3) && (
                   <Link
                     href="/equipment_groups/create"
@@ -246,7 +243,7 @@ const EquipmentGroupSearch = () => {
                           <td className="px-6 py-4">{equipment_group.equipment_group_code}</td>
                           <td className="px-6 py-4">{equipment_group.equipment_group}</td>
                           <td className="px-6 py-4">{equipment_group.department}</td>
-                          <td className="px-6 py-4 text-center relative">
+                          <td className="px-6 py-4 text-center relative ผ">
                             <button onClick={() => setDropdownOpen(dropdownOpen === equipment_group.equipment_group_id ? null : equipment_group.equipment_group_id)} className="px-4 py-2 bg-gray-500 text-white rounded">
                               Options
                             </button>

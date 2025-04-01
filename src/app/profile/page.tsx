@@ -1,20 +1,82 @@
+"use client"
+
+import { useEffect, useState } from "react";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Image from "next/image";
-import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 
-export const metadata: Metadata = {
-  title: "Next.js Profile | TailAdmin - Next.js Dashboard Template",
-  description:
-    "This is Next.js Profile page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
-};
+type UserProps = {
+  user_id: number;
+  user_code: string;
+  email: string;
+  role_id: number;
+  role_code: string;
+  role: string;
+  department_id: number;
+  department_code: string;
+  department: string;
+  rank_id: number;
+  rank_code: string;
+  full_rank: string;
+  short_rank: string;
+  firstname: string;
+  lastname: string;
+  gender_id: number;
+  gender_code: string;
+  gender: string;
+  birthdate: string;
+  phone_number: string;
+  user_status_id: number;
+  user_status_code: string;
+  user_status: string;
+}
 
 const Profile = () => {
+  const { data: session } = useSession();
+  const [user, setUser] = useState<UserProps>();
+
+  const permissionValue = 1;
+
+  useEffect(() => {
+    fetchData();
+  }, [session]);
+
+  const fetchData = async () => {
+    if (session?.user?.token) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/profile`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.token}`,
+            "Content-Type": "application/json",
+            Permission: permissionValue.toString(),
+          },
+        });
+
+        if (response.status === 401) {
+          signOut({ callbackUrl: "/auth/signin" });
+        } else if (response.status === 403) {
+          window.location.href = "/";
+        }
+
+        const result = await response.json();
+        if (response.ok && result.status) {
+          setUser(result.data);
+        } else {
+          console.error("Error fetching datas:", result.message);
+        }
+      } catch (error) {
+        console.error("Error fetching datas:", error);
+      }
+    }
+  };
+
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-242.5">
-        <Breadcrumb pageName="Profile" />
+        <Breadcrumb pageName={["Profile"]} />
 
         <div className="overflow-hidden rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="relative z-20 h-35 md:h-65">
@@ -116,9 +178,9 @@ const Profile = () => {
             </div>
             <div className="mt-4">
               <h3 className="mb-1.5 text-2xl font-semibold text-black dark:text-white">
-                Danish Heilium
+                {user && user.short_rank} {user && user.firstname} {user && user.lastname}
               </h3>
-              <p className="font-medium">Ui/Ux Designer</p>
+              <p className="font-medium">{user && user.department}</p>
               <div className="mx-auto mb-5.5 mt-4.5 grid max-w-94 grid-cols-3 rounded-md border border-stroke py-2.5 shadow-1 dark:border-strokedark dark:bg-[#37404F]">
                 <div className="flex flex-col items-center justify-center gap-1 border-r border-stroke px-4 dark:border-strokedark xsm:flex-row">
                   <span className="font-semibold text-black dark:text-white">
@@ -144,13 +206,33 @@ const Profile = () => {
                 <h4 className="font-semibold text-black dark:text-white">
                   About Me
                 </h4>
-                <p className="mt-4.5">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Pellentesque posuere fermentum urna, eu condimentum mauris
-                  tempus ut. Donec fermentum blandit aliquet. Etiam dictum
-                  dapibus ultricies. Sed vel aliquet libero. Nunc a augue
-                  fermentum, pharetra ligula sed, aliquam lacus.
-                </p>
+                {user && (
+                  <div className="grid grid-cols-2 divide-x divide-stroke dark:divide-strokedark text-sm text-black dark:text-white mt-5">
+                    {/* Label column */}
+                    <div className="pr-6 space-y-3 text-right">
+                      <p><strong>Full Name</strong></p>
+                      <p><strong>E-mail</strong></p>
+                      <p><strong>Phone</strong></p>
+                      <p><strong>Role</strong></p>
+                      <p><strong>Birthdate</strong></p>
+                      <p><strong>Status</strong></p>
+                    </div>
+
+                    {/* Value column */}
+                    <div className="pl-6 space-y-3 text-left">
+                      <p>{user.short_rank} {user.firstname} {user.lastname}</p>
+                      <p>{user.email}</p>
+                      <p>{user.phone_number}</p>
+                      <p>{user.role}</p>
+                      <p>{new Date(user.birthdate).toLocaleString("en-GB", {
+                        year: "numeric",
+                        month: "long",
+                        day: "2-digit",
+                      })}</p>
+                      <p>{user.user_status}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6.5">
