@@ -124,6 +124,7 @@ const menuGroups = [
         ),
         label: "Gengers",
         route: "/genders/search",
+        permission: 25,
       },
       {
         icon: (
@@ -147,7 +148,7 @@ const menuGroups = [
         ),
         label: "Departments",
         route: "/departments/search",
-        permission: 25,
+        permission: 15,
       },
       {
         icon: (
@@ -441,6 +442,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     fetchPermissions();
   }, [session]);
 
+  const hasVisibleMenuItems = (menuItems: any[]) => {
+    return menuItems.some(
+      (item) =>
+        !item.permission ||
+        userPermissions.includes(item.permission) ||
+        (item.children &&
+          item.children.some((child: any) =>
+            userPermissions.includes(child.permission)
+          ))
+    );
+  };
+
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
       <aside
@@ -484,31 +497,61 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
           {/* <!-- Sidebar Menu --> */}
           <nav className="mt-5 px-4 py-4 lg:mt-9 lg:px-6">
-            {menuGroups.map((group, groupIndex) => (
-              <div key={groupIndex}>
-                <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
-                  {group.name}
-                </h3>
+            {menuGroups
+              .filter((group) =>
+                group.menuItems.some((item) => {
+                  // ถ้าเป็นเมนูย่อย
+                  if (
+                    "children" in item &&
+                    Array.isArray(item.children)
+                  ) {
+                    return item.children.some((child: any) =>
+                      userPermissions.includes(child.permission)
+                    );
+                  }
 
-                <ul className="mb-6 flex flex-col gap-1.5">
-                  {group.menuItems
-                    .filter((menuItem) => {
-                      return (
-                        !menuItem.permission || // ถ้าไม่มี permission จะถือว่า public
-                        userPermissions.includes(menuItem.permission)
-                      );
-                    })
-                    .map((menuItem, menuIndex) => (
-                      <SidebarItem
-                        key={menuIndex}
-                        item={menuItem}
-                        pageName={pageName}
-                        setPageName={setPageName}
-                      />
-                    ))}
-                </ul>
-              </div>
-            ))}
+                  // ถ้าเป็นเมนูปกติ
+                  return (
+                    !item.permission || userPermissions.includes(item.permission)
+                  );
+                })
+              )
+              .map((group, groupIndex) => (
+                <div key={groupIndex}>
+                  {group.name && (
+                    <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+                      {group.name}
+                    </h3>
+                  )}
+                  <ul className="mb-6 flex flex-col gap-1.5">
+                    {group.menuItems
+                      .filter((menuItem) => {
+                        if (
+                          "children" in menuItem &&
+                          Array.isArray(menuItem.children)
+                        ) {
+                          menuItem.children = menuItem.children.filter((child: any) =>
+                            userPermissions.includes(child.permission)
+                          );
+                          return menuItem.children.length > 0;
+                        }
+
+                        return (
+                          !menuItem.permission ||
+                          userPermissions.includes(menuItem.permission)
+                        );
+                      })
+                      .map((menuItem, menuIndex) => (
+                        <SidebarItem
+                          key={menuIndex}
+                          item={menuItem}
+                          pageName={pageName}
+                          setPageName={setPageName}
+                        />
+                      ))}
+                  </ul>
+                </div>
+              ))}
           </nav>
           {/* <!-- Sidebar Menu --> */}
         </div>
