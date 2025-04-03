@@ -175,7 +175,7 @@ const DropdownUser = () => {
           <button
             onClick={() => {
               signOut({
-                callbackUrl: process.env.NEXT_PUBLIC_API_BASE_URL + "/auth/signin",
+                callbackUrl: process.env.NEXT_PUBLIC_BASE_URL + "/auth/signin",
               });
             }}
             className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
