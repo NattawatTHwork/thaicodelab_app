@@ -149,7 +149,7 @@ const EquipmentGroupCreate = () => {
                         type="text"
                         name="equipment_group"
                         id="equipment_group"
-                        placeholder="Avionics"
+                        placeholder="WareHouse 1"
                         value={formData.equipment_group}
                         onChange={handleChange}
                       />
