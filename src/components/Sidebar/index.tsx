@@ -518,11 +518,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               )
               .map((group, groupIndex) => (
                 <div key={groupIndex}>
-                  {group.name && (
-                    <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
-                      {group.name}
-                    </h3>
-                  )}
+                  {group.name &&
+                    group.menuItems.some((item) => {
+                      if ("children" in item && Array.isArray(item.children)) {
+                        return item.children.some((child: any) =>
+                          userPermissions.includes(child.permission)
+                        );
+                      }
+                      return !item.permission || userPermissions.includes(item.permission);
+                    }) && (
+                      <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+                        {group.name}
+                      </h3>
+                    )}
                   <ul className="mb-6 flex flex-col gap-1.5">
                     {group.menuItems
                       .filter((menuItem) => {
