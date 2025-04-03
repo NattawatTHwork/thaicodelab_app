@@ -32,7 +32,7 @@ const EquipmentStatusSearch = () => {
   } | null>(null);
 
   // กำหนดค่า Permission
-  const permissionValue = 2;
+  const permissionValue = 50;
 
   useEffect(() => {
     fetchPermissions();
