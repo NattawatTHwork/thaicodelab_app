@@ -172,7 +172,14 @@ const DropdownUser = () => {
               </Link>
             </li> */}
           </ul>
-          <button onClick={() => { signOut({ callbackUrl: "/auth/signin" }) }} className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+          <button
+            onClick={() => {
+              signOut({
+                callbackUrl: process.env.NEXT_PUBLIC_API_BASE_URL + "/auth/signin",
+              });
+            }}
+            className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+          >
             <svg
               className="fill-current"
               width="22"
